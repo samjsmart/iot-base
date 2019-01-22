@@ -2,7 +2,9 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include "web.h"
+#include "Web.h"
+#include "Logger.h"
+#include "Array.h"
 
 const int LED     = D6;
 int ledState      = LOW;
@@ -31,7 +33,6 @@ void setup() {
   server.on("/", [](){
     server.send(200, "text/html", page("Index", "<h1>Playground</h1><br><form method=\"POST\" action=\"/led\"><button type=\"submit\" value=\"submit\" class=\"btn btn-primary\">LED Toggle</button></form>"));
   });
-
 
   server.on("/led", [](){
      ledState = !ledState;
