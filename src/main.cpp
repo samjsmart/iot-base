@@ -3,8 +3,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include "Web.h"
-#include "Logger.h"
-#include "Array.h"
+#include "logger.h"
 
 const int LED     = D6;
 int ledState      = LOW;
