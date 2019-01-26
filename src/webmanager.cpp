@@ -23,7 +23,7 @@ void WebManager::sendHtml(String title, String content, int httpCode) {
       "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css\">\n"
     "</head>\n"
     "<body>\n"
-      "<div style=\"margin:0 auto;max-width:900px;text-align:center;\">\n" + content + "</div>\n"
+      "<div style=\"margin:0 auto;max-width:450px;text-align:center;\">\n" + content + "</div>\n"
     "</body>\n"
     "</html>"
   );
@@ -37,9 +37,14 @@ void WebManager::handle() {
   server->handleClient();
 }
 
-FormInput::FormInput(int type, String name, String label) {
-  this->type = type;
-  this->name = name;
+ESP8266WebServer* WebManager::getServer() {
+  return server;
+}
+
+FormElement::FormElement(int type, String name, String label, String value) {
+  this->type  = type;
+  this->name  = name;
+  this->value = value;
 
   if(!label)
     this->label = name;
@@ -47,35 +52,30 @@ FormInput::FormInput(int type, String name, String label) {
     this->label = label;
 }
 
-FormInput::FormInput(int type, String name, String* options, int optionCount, String label) {
-  this->type        = type;
-  this->name        = name;
-  this->options     = options;
-  this->optionCount = optionCount;
-
-  if(!label)
-    this->label = name;
-  else
-    this->label = label;
+FormElement* FormElement::next() {
+  return nextElement;
 }
 
-FormInput* FormInput::next() {
-  return nextInput;
+void FormElement::setNext(FormElement* nextElement) {
+  this->nextElement = nextElement;
 }
 
-void FormInput::setNext(FormInput* nextInput) {
-  this->nextInput = nextInput;
+void FormElement::setValue(String value) {
+  this->value = value;
 }
 
-String FormInput::render() {
+String FormElement::render() {
   String html;
 
   switch (type) {
-    case RADIO:
+
+    case formElement::TITLE:
+      html =  "<div class=\"form-check\">\n"
+              "<h3>" + name + "</h3>"
+              "</div>\n";
     break;
 
-
-    case CHECKBOX:
+    case formElement::CHECKBOX:
       html =  "<div class=\"form-check\">\n"
               "<input class=\"form-check-input\" type=\"checkbox\" id=\"" + name + "\">\n"
               "<label class=\"form-check-label\" for=\"" + name + "\">" + label + "</label>\n"
@@ -83,10 +83,10 @@ String FormInput::render() {
     break;
 
     default:
-    case TEXT:
+    case formElement::TEXT:
       html = "<div class=\"form-group\">\n"
              "<label for=\"" + name + "\">" + label + "</label>\n"
-             "<input type=\"text\" class=\"form-control\" id=\"" + name + "\">\n"
+             "<input type=\"text\" class=\"form-control\" name=\"" + name + "\" id=\"" + name + "\" value=\"" + value + "\">\n"
              "</div>\n";
     break;
   }
@@ -94,44 +94,42 @@ String FormInput::render() {
   return html;
 }
 
-FormInput* Form::getLastInput() {
-  FormInput* currentItem = firstInput;
+FormElement* Form::getLastInput() {
+  FormElement* currentElement = firstElement;
 
-  while(currentItem->next() != nullptr) {
-    currentItem = currentItem->next();
+  while(currentElement->next() != nullptr) {
+    currentElement = currentElement->next();
   }
 
-  return currentItem;
+  return currentElement;
 }
 
-void Form::addInput(int type, String name, String label) {
-  if(firstInput == nullptr) {
-    firstInput = new FormInput(type, name, label);
-  } else {
-    getLastInput()->setNext(new FormInput(type, name, label));
-  }
-}
+FormElement* Form::addElement(int type, String name, String label, String value) {
+  FormElement* newElement = new FormElement(type, name, label, value);
 
-void Form::addInput(int type, String name, String* options, int optionCount, String label) {
-  if(firstInput == nullptr) {
-    firstInput = new FormInput(type, name, label);
+  if(firstElement == nullptr) {
+    firstElement = newElement;
   } else {
-    getLastInput()->setNext(new FormInput(type, name, options, optionCount, label));
+    getLastInput()->setNext(newElement);
   }
+
+  return newElement;
 }
 
 String Form::render() {
-  String content = "<form action=\"post\">";
-  Serial.println("WM - Rendering");
+  String content = "<form method=\"post\">";
 
-  FormInput* currentItem = firstInput;
+  FormElement* currentElement = firstElement;
 
-  while(currentItem != nullptr) {
-    content     += currentItem->render();
-    currentItem = currentItem->next();
+  while(currentElement != nullptr) {
+    content     += currentElement->render();
+    currentElement = currentElement->next();
   }
 
-  content += "</form>";
+  content +=  "<div class=\"form-group\">\n"
+              "<button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
+              "</div>\n"
+              "</form>\n";
 
   return content;
 }

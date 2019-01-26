@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 
-enum formType {
-  RADIO,
+enum formElement {
+  TITLE,
   TEXT,
   PASSWORD,
   CHECKBOX
@@ -14,36 +14,37 @@ class WebManager {
 
   public:
     WebManager();
+    ESP8266WebServer* getServer();
     void addRoute(String route, void (*callback)(void));
     void sendHtml(String title,  String content, int httpCode = 200);
     void begin();
     void handle();
 };
 
-class FormInput {
+class FormElement {
   private:
     int type;
     String name;
     String label;
+    String value;
     String* options;
     int optionCount;
-    FormInput* nextInput = nullptr;
+    FormElement* nextElement = nullptr;
 
   public:
-    FormInput(int type, String name, String label = "");
-    FormInput(int type, String name, String* options, int optionCount, String label = "");
-    FormInput* next();
-    void setNext(FormInput*);
+    FormElement(int type, String name, String label = "", String value = "");
+    FormElement* next();
+    void setValue(String value);
+    void setNext(FormElement*);
     String render();
 };
 
 class Form {
   private:
-    FormInput* firstInput = nullptr;
+    FormElement* firstElement = nullptr;
 
   public:
-    void addInput(int type, String name, String label = "");
-    void addInput(int type, String name, String* options, int optionCount, String label = "");
-    FormInput* getLastInput();
+    FormElement* addElement(int type, String name, String label = "", String value = "");
+    FormElement* getLastInput();
     String render();
 };
