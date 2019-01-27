@@ -47,6 +47,14 @@ void handleControl() {
   webManager->sendHtml("Control", controlForm.render());
 }
 
+void handleStateTopic(byte* message, unsigned int length) {
+    Serial.println("StateTopicInvoked!");
+}
+
+void handleCommandTopic(byte* message, unsigned int length) {
+    Serial.println("CommandTopicInvoked!");
+}
+
 void setup() {
   // Standard innit
   Serial.begin(9600);
@@ -61,6 +69,12 @@ void setup() {
   // We have WiFi, lets move on
   configManager = new ConfigManager;
   webManager    = new WebManager;
+  mqttManager   = new MqttManager(
+    PROJECT_NAME,
+    configManager->getString("mqtthost").c_str(),
+    configManager->getString("mqttusername").c_str(),
+    configManager->getString("mqttpassword").c_str()
+  );
 
   // Create the forms once the Managers are created
   createConfigForm();
@@ -73,9 +87,14 @@ void setup() {
 
   // Away we go
   webManager->begin();
+
+  // Configure MQTT
+  mqttManager->on("stateTopic",   handleStateTopic);
+  mqttManager->on("commandTopic", handleCommandTopic);
 }
 
 void loop() {
   ArduinoOTA.handle();
   webManager->handle();
+  mqttManager->handle();
 }

@@ -22,7 +22,8 @@ WiFiManager wifiManager;
  * has finished doing it's thang.
  */
 ConfigManager* configManager;
-WebManager* webManager;
+WebManager*    webManager;
+MqttManager*   mqttManager;
 
 // Manage device configuration
 Form         configForm;
