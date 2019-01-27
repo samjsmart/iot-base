@@ -9,6 +9,8 @@ void WebManager::addRoute(String route, void (*callback)()) {
 }
 
 void WebManager::sendHtml(String title, String content, int httpCode) {
+
+  //TODO: sort this mess out
   server->send(
     httpCode,
     "text/html",
@@ -19,11 +21,10 @@ void WebManager::sendHtml(String title, String content, int httpCode) {
       "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
       "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
       "<title>" + title + "</title>\n"
-      "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">\n"
-      "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css\">\n"
+      "<link rel=\"stylesheet\" href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css\">\n"
     "</head>\n"
     "<body>\n"
-      "<div style=\"margin:0 auto;max-width:450px;text-align:center;\">\n" + content + "</div>\n"
+      "<div style=\"margin:0 auto;max-width:450px;text-align:center;padding:1em 0em;\">\n" + content + "</div>\n"
     "</body>\n"
     "</html>"
   );
@@ -46,7 +47,7 @@ FormElement::FormElement(int type, String name, String label, String value) {
   this->name  = name;
   this->value = value;
 
-  if(!label)
+  if(label == "")
     this->label = name;
   else
     this->label = label;
@@ -56,7 +57,7 @@ FormElement* FormElement::next() {
   return nextElement;
 }
 
-void FormElement::setNext(FormElement* nextElement) {
+void FormElement::next(FormElement* nextElement) {
   this->nextElement = nextElement;
 }
 
@@ -70,8 +71,8 @@ String FormElement::render() {
   switch (type) {
 
     case formElement::TITLE:
-      html =  "<div class=\"form-check\">\n"
-              "<h3>" + name + "</h3>"
+      html =  "<div class=\"form-group\">\n"
+              "<h3>" + name + "</h3><hr>"
               "</div>\n";
     break;
 
@@ -79,6 +80,25 @@ String FormElement::render() {
       html =  "<div class=\"form-check\">\n"
               "<input class=\"form-check-input\" type=\"checkbox\" id=\"" + name + "\">\n"
               "<label class=\"form-check-label\" for=\"" + name + "\">" + label + "</label>\n"
+              "</div>\n";
+    break;
+
+    case formElement::BUTTON:
+      html =  "<div class=\"form-group\">\n"
+              "<button class=\"btn btn-primary\" type=\"submit\" name=\"" + name + "\" id=\"" + name + "\" value=\"" + name + "\">" + label + "</button>\n"
+              "</div>\n";
+    break;
+
+    case formElement::PASSWORD:
+      html = "<div class=\"form-group\">\n"
+             "<label for=\"" + name + "\">" + label + "</label>\n"
+             "<input type=\"password\" class=\"form-control\" name=\"" + name + "\" id=\"" + name + "\">\n"
+             "</div>\n";
+    break;
+
+    case formElement::SUBMIT:
+      html =  "<div class=\"form-group\">\n"
+              "<button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
               "</div>\n";
     break;
 
@@ -110,10 +130,14 @@ FormElement* Form::addElement(int type, String name, String label, String value)
   if(firstElement == nullptr) {
     firstElement = newElement;
   } else {
-    getLastInput()->setNext(newElement);
+    getLastInput()->next(newElement);
   }
 
   return newElement;
+}
+
+FormElement* Form::addSubmit() {
+  return addElement(formElement::SUBMIT, "");
 }
 
 String Form::render() {
@@ -126,10 +150,7 @@ String Form::render() {
     currentElement = currentElement->next();
   }
 
-  content +=  "<div class=\"form-group\">\n"
-              "<button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
-              "</div>\n"
-              "</form>\n";
+  content += "</form>\n";
 
   return content;
 }

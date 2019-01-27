@@ -1,37 +1,24 @@
 #include "main.h"
 
-// Create wifiManager
-WiFiManager wifiManager;
-
-/*
- * Use pointers so that we can control when managers are
- * constructed and ensure that it isn't before wifiManager
- * has finished doing it's thang.
- */
-ConfigManager* configManager;
-WebManager* webManager;
-
-// Manage device configuration
-Form         configForm;
-FormElement* mqttHostForm;
-FormElement* mqttUserForm;
-FormElement* mqttPassForm;
-
 void createConfigForm() {
   configForm.addElement(formElement::TITLE, "MQTT");
-  mqttHostForm = configForm.addElement(formElement::TEXT, "mqtthost",     "Host",     configManager->getString("mqtthost"));
-  mqttUserForm = configForm.addElement(formElement::TEXT, "mqttusername", "Username", configManager->getString("mqttusername"));
-  mqttPassForm = configForm.addElement(formElement::TEXT, "mqttpassword", "Password", configManager->getString("mqttpassword"));
+  mqttHostForm = configForm.addElement(formElement::TEXT,     "mqtthost",     "Host",     configManager->getString("mqtthost"));
+  mqttUserForm = configForm.addElement(formElement::TEXT,     "mqttusername", "Username", configManager->getString("mqttusername"));
+  mqttPassForm = configForm.addElement(formElement::PASSWORD, "mqttpassword", "Password", configManager->getString("mqttpassword"));
+  configForm.addSubmit();
 }
 
-// Homepage
+void createControlForm() {
+  controlForm.addElement(formElement::TITLE, "Control");
+  controlForm.addElement(formElement::BUTTON, "On");
+  controlForm.addElement(formElement::BUTTON, "Off");
+}
+
 void handleIndex() {
-  webManager->sendHtml("Title Page", "<h1>Hi</h1>");
+  webManager->sendHtml(PROJECT_NAME, "<h1>" PROJECT_NAME "</h1><hr><a href=\"/control\" class=\"btn btn-primary w-100 mb-3\">Control</a><a href=\"/config\" class=\"btn btn-primary w-100 mb-3\">Configuration</a>");
 }
 
-// Configuration page
 void handleConfig() {
-
   if(webManager->getServer()->method() == HTTP_POST) {
     ESP8266WebServer* server = webManager->getServer();
 
@@ -47,9 +34,23 @@ void handleConfig() {
   webManager->sendHtml("Configuration", configForm.render());
 }
 
+void handleControl() {
+  if(webManager->getServer()->method() == HTTP_POST) {
+    ESP8266WebServer* server = webManager->getServer();
+
+    if(server->hasArg("On"))
+      digitalWrite(LED, HIGH);
+    else
+      digitalWrite(LED, LOW);
+  }
+
+  webManager->sendHtml("Control", controlForm.render());
+}
+
 void setup() {
   // Standard innit
   Serial.begin(9600);
+  pinMode(LED, OUTPUT);
 
   // Enable OTA updates
   ArduinoOTA.begin();
@@ -61,12 +62,14 @@ void setup() {
   configManager = new ConfigManager;
   webManager    = new WebManager;
 
-  // Create the config form once the Managers are created
+  // Create the forms once the Managers are created
   createConfigForm();
+  createControlForm();
 
   // Add webserver routes
-  webManager->addRoute("/", handleIndex);
-  webManager->addRoute("/config", handleConfig);
+  webManager->addRoute("/",        handleIndex);
+  webManager->addRoute("/config",  handleConfig);
+  webManager->addRoute("/control", handleControl);
 
   // Away we go
   webManager->begin();

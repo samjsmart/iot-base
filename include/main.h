@@ -7,5 +7,28 @@
 
 #include "webmanager.h"
 #include "configmanager.h"
+#include "mqttmanager.h"
 
-#define WIFI_AP "LightBoxAP"
+#define PROJECT_NAME "LightBox"
+#define WIFI_AP      "LightBoxAP"
+
+const int LED = D1;
+
+WiFiManager wifiManager;
+
+/*
+ * Use pointers so that we can control when managers are
+ * constructed and ensure that it isn't before wifiManager
+ * has finished doing it's thang.
+ */
+ConfigManager* configManager;
+WebManager* webManager;
+
+// Manage device configuration
+Form         configForm;
+FormElement* mqttHostForm;
+FormElement* mqttUserForm;
+FormElement* mqttPassForm;
+
+// Control form
+Form         controlForm;

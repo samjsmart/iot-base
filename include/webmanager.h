@@ -5,7 +5,9 @@ enum formElement {
   TITLE,
   TEXT,
   PASSWORD,
-  CHECKBOX
+  CHECKBOX,
+  BUTTON,
+  SUBMIT
 };
 
 class WebManager {
@@ -15,28 +17,28 @@ class WebManager {
   public:
     WebManager();
     ESP8266WebServer* getServer();
-    void addRoute(String route, void (*callback)(void));
-    void sendHtml(String title,  String content, int httpCode = 200);
-    void begin();
-    void handle();
+    void              addRoute(String route, void (*callback)(void));
+    void              sendHtml(String title,  String content, int httpCode = 200);
+    void              begin();
+    void              handle();
 };
 
 class FormElement {
   private:
-    int type;
-    String name;
-    String label;
-    String value;
-    String* options;
-    int optionCount;
+    int          type;
+    String       name;
+    String       label;
+    String       value;
+    String*      options;
+    int          optionCount;
     FormElement* nextElement = nullptr;
 
   public:
     FormElement(int type, String name, String label = "", String value = "");
     FormElement* next();
-    void setValue(String value);
-    void setNext(FormElement*);
-    String render();
+    void         next(FormElement*);
+    void         setValue(String value);
+    String       render();
 };
 
 class Form {
@@ -45,6 +47,7 @@ class Form {
 
   public:
     FormElement* addElement(int type, String name, String label = "", String value = "");
+    FormElement* addSubmit();
     FormElement* getLastInput();
-    String render();
+    String       render();
 };
