@@ -34,6 +34,7 @@ class FormElement {
     FormElement* nextElement = nullptr;
 
   public:
+    ~FormElement();
     FormElement(int type, String name, String label = "", String value = "");
     FormElement* next();
     void         next(FormElement*);
@@ -46,6 +47,7 @@ class Form {
     FormElement* firstElement = nullptr;
 
   public:
+    ~Form();
     FormElement* addElement(int type, String name, String label = "", String value = "");
     FormElement* addSubmit();
     FormElement* getLastInput();

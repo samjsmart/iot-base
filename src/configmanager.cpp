@@ -1,10 +1,8 @@
 #include "configmanager.h"
 
 ConfigManager::ConfigManager() {
-  // Init SPIFFS
   SPIFFS.begin();
 
-  // Check if FS is formatted
   if(!SPIFFS.exists("/formatted")) {
     Serial.println("CM - File system not formatted");
 
@@ -28,25 +26,20 @@ bool ConfigManager::itemExists(String key) {
 }
 
 void ConfigManager::deleteItem(String key) {
-  // Construct file path
   String filePath = "/cm-" + key;
 
-  //Delete if exists
   if(SPIFFS.exists(filePath)) {
     SPIFFS.remove(filePath);
   }
 }
 
 void ConfigManager::setString(String key, String value) {
-  // Construct file path
   String filePath = "/cm-" + key;
 
-  // Remove existing config
   if(SPIFFS.exists(filePath)) {
     SPIFFS.remove(filePath);
   }
 
-  // Open/create the file and write contents
   File file = SPIFFS.open(filePath, "w");
   file.print(value);
   file.flush();
@@ -54,18 +47,14 @@ void ConfigManager::setString(String key, String value) {
 }
 
 String ConfigManager::getString(String key) {
-  // Construct file path
   String filePath = "/cm-" + key;
 
-  // Check file exists
   if(!SPIFFS.exists(filePath)) {
     return "";
   }
 
-  // Open file for reading
   File file = SPIFFS.open(filePath, "r");
 
-  //Read contents into string
   String value;
   while(file.available()) {
     value += char(file.read());

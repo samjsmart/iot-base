@@ -53,6 +53,11 @@ FormElement::FormElement(int type, String name, String label, String value) {
     this->label = label;
 }
 
+FormElement::~FormElement() {
+  if(nextElement != nullptr)
+    delete nextElement;
+}
+
 FormElement* FormElement::next() {
   return nextElement;
 }
@@ -112,6 +117,11 @@ String FormElement::render() {
   }
 
   return html;
+}
+
+Form::~Form() {
+  if(firstElement != nullptr)
+    delete firstElement;
 }
 
 FormElement* Form::getLastInput() {

@@ -1,9 +1,13 @@
 #include "mqttmanager.h"
 
-
 MqttCallback::MqttCallback(char* topic, void (*callback)(byte* payload, unsigned int length)) {
   this->topic    = topic;
   this->callback = callback;
+}
+
+MqttCallback::~MqttCallback() {
+  if(nextCallback != nullptr)
+    delete nextCallback;
 }
 
 void MqttCallback::next(MqttCallback* nextCallback) {
@@ -33,7 +37,6 @@ MqttManager::MqttManager(const char* clientID, const char* host, const char* use
   std::function<void(char*, uint8_t*, unsigned int)> boundCallback = std::bind(&MqttManager::callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
   //TODO: resolve hostname if passed one
-  //Convert string to IP
   char buffer[256];
   int   IP[4];
   strcpy(buffer, host);
@@ -47,6 +50,12 @@ MqttManager::MqttManager(const char* clientID, const char* host, const char* use
 
   pubSubClient->setServer(ip, 1883);
   pubSubClient->setCallback(boundCallback);
+}
+
+MqttManager::~MqttManager() {
+  //TODO: Make this iterate rather than creating a destructor call chain
+  if(firstCallback != nullptr)
+    delete firstCallback;
 }
 
 void MqttManager::on(char* topic, void (*callback)(byte* payload, unsigned int length)) {

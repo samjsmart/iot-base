@@ -9,6 +9,7 @@ class MqttCallback {
     MqttCallback* nextCallback = nullptr;
 
   public:
+    ~MqttCallback();
     MqttCallback(char* topic, void (*callback)(byte* payload, unsigned int length));
     MqttCallback* next();
     void next(MqttCallback* nextCallback);
@@ -27,6 +28,7 @@ class MqttManager {
     MqttCallback* firstCallback = nullptr;
 
   public:
+    ~MqttManager();
     MqttManager(const char* clientID, const char* host, const char* username = "", const char* password = "");
     void on(char* topic, void (*callback)(byte* payload, unsigned int length));
     MqttCallback* getLastCallback();
