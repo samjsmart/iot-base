@@ -4,6 +4,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
+#include <ArduinoJson.h>
 
 #include "webmanager.h"
 #include "configmanager.h"
@@ -30,6 +31,11 @@ Form         configForm;
 FormElement* mqttHostForm;
 FormElement* mqttUserForm;
 FormElement* mqttPassForm;
+FormElement* mqttTopicForm;
 
 // Control form
 Form         controlForm;
+
+// MQTT Stuff
+String      stateTopic;
+String      commandTopic;

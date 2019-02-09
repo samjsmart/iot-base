@@ -2,9 +2,10 @@
 
 void createConfigForm() {
   configForm.addElement(formElement::TITLE, "MQTT");
-  mqttHostForm = configForm.addElement(formElement::TEXT,     "mqtthost",     "Host",     configManager->getString("mqtthost"));
-  mqttUserForm = configForm.addElement(formElement::TEXT,     "mqttusername", "Username", configManager->getString("mqttusername"));
-  mqttPassForm = configForm.addElement(formElement::PASSWORD, "mqttpassword", "Password", configManager->getString("mqttpassword"));
+  mqttHostForm  = configForm.addElement(formElement::TEXT,     "mqtthost",     "Host",     configManager->getString("mqtthost"));
+  mqttUserForm  = configForm.addElement(formElement::TEXT,     "mqttusername", "Username", configManager->getString("mqttusername"));
+  mqttPassForm  = configForm.addElement(formElement::PASSWORD, "mqttpassword", "Password", configManager->getString("mqttpassword"));
+  mqttTopicForm = configForm.addElement(formElement::TEXT,     "mqtttopic",    "Topic",    configManager->getString("mqtttopic"));
   configForm.addSubmit();
 }
 
@@ -25,10 +26,18 @@ void handleConfig() {
     mqttHostForm->setValue(server->arg("mqtthost"));
     mqttUserForm->setValue(server->arg("mqttusername"));
     mqttPassForm->setValue(server->arg("mqttpassword"));
+    mqttTopicForm->setValue(server->arg("mqtttopic"));
 
     configManager->setString("mqtthost",     server->arg("mqtthost"));
     configManager->setString("mqttusername", server->arg("mqttusername"));
     configManager->setString("mqttpassword", server->arg("mqttpassword"));
+    configManager->setString("mqtttopic",    server->arg("mqtttopic"));
+
+    webManager->sendHtml(PROJECT_NAME, "<h1>Save Complete!</h1><p>Restarting...</p>");
+
+    delay(1000);
+
+    ESP.reset();
   }
 
   webManager->sendHtml("Configuration", configForm.render());
@@ -47,12 +56,14 @@ void handleControl() {
   webManager->sendHtml("Control", controlForm.render());
 }
 
-void handleStateTopic(byte* message, unsigned int length) {
-    Serial.println("StateTopicInvoked!");
-}
-
 void handleCommandTopic(byte* message, unsigned int length) {
-    Serial.println("CommandTopicInvoked!");
+    if(!strncmp((char *)message, "1", length)) {
+      digitalWrite(LED, HIGH);
+      mqttManager->pub(stateTopic.c_str(), "ON");
+    } else if(!strncmp((char *)message, "0", length)) {
+      digitalWrite(LED, LOW);
+      mqttManager->pub(stateTopic.c_str(), "ON");
+    }
 }
 
 void setup() {
@@ -88,9 +99,14 @@ void setup() {
   // Away we go
   webManager->begin();
 
+  // Create topic strings
+  stateTopic   = String("stat/" + configManager->getString("mqtttopic"));
+  commandTopic = String("cmnd/" + configManager->getString("mqtttopic"));
+
   // Configure MQTT
-  mqttManager->on("stateTopic",   handleStateTopic);
-  mqttManager->on("commandTopic", handleCommandTopic);
+  mqttManager->on(commandTopic.c_str(), handleCommandTopic);
+
+  Serial.println("Bootstrap complete");
 }
 
 void loop() {

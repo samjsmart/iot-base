@@ -4,16 +4,16 @@
 
 class MqttCallback {
   private:
-    char* topic;
+    const char* topic;
     void (*callback)(byte* payload, unsigned int length);
     MqttCallback* nextCallback = nullptr;
 
   public:
     ~MqttCallback();
-    MqttCallback(char* topic, void (*callback)(byte* payload, unsigned int length));
+    MqttCallback(const char* topic, void (*callback)(byte* payload, unsigned int length));
     MqttCallback* next();
     void next(MqttCallback* nextCallback);
-    char* getTopic();
+    const char* getTopic();
     void invoke(byte* payload, unsigned int length);
 };
 
@@ -30,7 +30,7 @@ class MqttManager {
   public:
     ~MqttManager();
     MqttManager(const char* clientID, const char* host, const char* username = "", const char* password = "");
-    void on(char* topic, void (*callback)(byte* payload, unsigned int length));
+    void on(const char* topic, void (*callback)(byte* payload, unsigned int length));
     MqttCallback* getLastCallback();
     void callback(char* topic, byte* payload, unsigned int length);
     void handle();
@@ -38,4 +38,5 @@ class MqttManager {
     void setUsername(char* username);
     void setPassword(char* password);
     void reconnect();
+    int pub(const char* topic, const char* payload);
 };

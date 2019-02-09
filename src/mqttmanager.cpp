@@ -1,6 +1,6 @@
 #include "mqttmanager.h"
 
-MqttCallback::MqttCallback(char* topic, void (*callback)(byte* payload, unsigned int length)) {
+MqttCallback::MqttCallback(const char* topic, void (*callback)(byte* payload, unsigned int length)) {
   this->topic    = topic;
   this->callback = callback;
 }
@@ -18,7 +18,7 @@ MqttCallback* MqttCallback::next() {
   return nextCallback;
 }
 
-char* MqttCallback::getTopic() {
+const char* MqttCallback::getTopic() {
   return topic;
 }
 
@@ -58,7 +58,7 @@ MqttManager::~MqttManager() {
     delete firstCallback;
 }
 
-void MqttManager::on(char* topic, void (*callback)(byte* payload, unsigned int length)) {
+void MqttManager::on(const char* topic, void (*callback)(byte* payload, unsigned int length)) {
   MqttCallback* newCallback = new MqttCallback(topic, callback);
 
   if(firstCallback == nullptr) {
@@ -118,4 +118,8 @@ void MqttManager::handle() {
     reconnect();
   }
   pubSubClient->loop();
+}
+
+int MqttManager::pub(const char* topic, const char* payload) {
+  return pubSubClient->publish(topic, payload);
 }
